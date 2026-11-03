@@ -1,40 +1,61 @@
-
 <?php
+
 // Mengambil data dari formulir
-$kecamatan = trim($_POST['kecamatan'] ?? '');
+$ogc_fid = $_POST['ogc_fid'] ?? '';
+$no = $_POST['no'] ?? '';
+$biopori = trim($_POST['biopori'] ?? '');
+$alamat = trim($_POST['alamat'] ?? '');
+$jumlah = $_POST['jumlah'] ?? '';
 $longitude = $_POST['longitude'] ?? '';
 $latitude = $_POST['latitude'] ?? '';
-$luas = $_POST['luas'] ?? '';
-$jumlah_penduduk = $_POST['jumlah_penduduk'] ?? '';
 
-// Memeriksa data yang wajib diisi
+// Memeriksa kelengkapan data
 if (
-    $kecamatan === '' ||
+    $ogc_fid === '' ||
+    $no === '' ||
+    $biopori === '' ||
+    $alamat === '' ||
+    $jumlah === '' ||
     $longitude === '' ||
-    $latitude === '' ||
-    $luas === '' ||
-    $jumlah_penduduk === ''
+    $latitude === ''
 ) {
     die("Semua kolom harus diisi.");
 }
 
-// Memeriksa apakah data numerik valid
+// Memeriksa tipe data bilangan bulat
+if (
+    !ctype_digit((string)$ogc_fid) ||
+    !ctype_digit((string)$no) ||
+    !ctype_digit((string)$jumlah)
+) {
+    die("OGC FID, nomor, dan jumlah harus berupa bilangan bulat.");
+}
+
+// Memeriksa koordinat
 if (
     !is_numeric($longitude) ||
     !is_numeric($latitude) ||
-    !is_numeric($luas) ||
-    !is_numeric($jumlah_penduduk) ||
-    (float)$luas < 1 ||
-    (int)$jumlah_penduduk < 0
+    (float)$longitude < -180 ||
+    (float)$longitude > 180 ||
+    (float)$latitude < -90 ||
+    (float)$latitude > 90 ||
+    (float)$jumlah < 0
 ) {
-    die("Periksa kembali koordinat, luas, dan jumlah penduduk.");
+    die("Periksa kembali nilai jumlah dan koordinat.");
 }
+
+// Mengubah data numerik
+$ogc_fid = (int)$ogc_fid;
+$no = (int)$no;
+$jumlah = (int)$jumlah;
+$longitude = (float)$longitude;
+$latitude = (float)$latitude;
 
 // Pengaturan koneksi database
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "latihan";
+$dbname = "BioporiYogya";
 
 // Membuat koneksi
 $conn = new mysqli(
@@ -49,32 +70,47 @@ if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
 
-// Menyimpan data ke tabel penduduk
+// Menyiapkan perintah INSERT
 $stmt = $conn->prepare(
-    "INSERT INTO penduduk
-    (kecamatan, longitude, latitude, luas, jumlah_penduduk)
-    VALUES (?, ?, ?, ?, ?)"
+    "INSERT INTO biopori
+    (ogc_fid, `no`, biopori, alamat, jumlah, longitude, latitude)
+    VALUES (?, ?, ?, ?, ?, ?, ?)"
 );
 
+if (!$stmt) {
+    die("Gagal menyiapkan perintah: " . $conn->error);
+}
+
+// Menghubungkan parameter
 $stmt->bind_param(
-    "sdddi",
-    $kecamatan,
+    "iissidd",
+    $ogc_fid,
+    $no,
+    $biopori,
+    $alamat,
+    $jumlah,
     $longitude,
-    $latitude,
-    $luas,
-    $jumlah_penduduk
+    $latitude
 );
 
+// Menjalankan penyimpanan data
 if ($stmt->execute()) {
+
     $stmt->close();
     $conn->close();
 
+    // Kembali ke halaman utama
     header("Location: ../index.php");
     exit;
+
 } else {
-    echo "Data gagal disimpan: " . $stmt->error;
+
+    $error = $stmt->error;
+
+    $stmt->close();
+    $conn->close();
+
+    die("Data gagal disimpan: " . $error);
 }
 
-$stmt->close();
-$conn->close();
 ?>

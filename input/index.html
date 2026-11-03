@@ -1,37 +1,78 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Input Data Biopori</title>
+</head>
 <body>
-    <h2>Form Input</h2>
 
-    <form action="input.php" onsubmit="return validateForm()" method="post">
-        <label for="kec">Kecamatan:</label><br>
-        <input type="text" id="kec" name="kecamatan" value=""><br>
+    <h2>Form Input Data Biopori</h2>
 
-        <label for="long">Longitude:</label><br>
-        <input type="text" id="long" name="longitude" value=""><br>
+    <form action="input.php"
+          onsubmit="return validateForm()"
+          method="post">
 
-        <label for="lat">Latitude:</label><br>
-        <input type="text" id="lat" name="latitude" value=""><br>
+        <label for="ogc_fid">OGC FID:</label><br>
+        <input type="number" id="ogc_fid" name="ogc_fid"
+               step="1" required><br>
 
-        <label for="luas">Luas:</label><br>
-        <input type="text" id="luas" name="luas" value=""><br>
+        <label for="no">Nomor:</label><br>
+        <input type="number" id="no" name="no"
+               step="1" required><br>
 
-        <label for="jml_ppdk">Jumlah Penduduk:</label><br>
-        <input type="text" id="jml_ppdk" name="jumlah_penduduk" value=""><br><br>
+        <label for="biopori">Biopori:</label><br>
+        <input type="text" id="biopori" name="biopori"
+               required><br>
+
+        <label for="alamat">Alamat:</label><br>
+        <input type="text" id="alamat" name="alamat"
+               required><br>
+
+        <label for="jumlah">Jumlah:</label><br>
+        <input type="number" id="jumlah" name="jumlah"
+               min="0" step="1" required><br>
+
+        <label for="longitude">Longitude:</label><br>
+        <input type="number" id="longitude" name="longitude"
+               step="any" required><br>
+
+        <label for="latitude">Latitude:</label><br>
+        <input type="number" id="latitude" name="latitude"
+               step="any" required><br><br>
 
         <input type="submit" value="Submit">
+
     </form>
 
     <p id="informasi"></p>
 
     <script>
         function validateForm() {
-            let luas = document.getElementById("luas").value;
+
+            let ogc_fid = Number(document.getElementById("ogc_fid").value);
+            let no = Number(document.getElementById("no").value);
+            let jumlah = Number(document.getElementById("jumlah").value);
+            let longitude = Number(document.getElementById("longitude").value);
+            let latitude = Number(document.getElementById("latitude").value);
+
             let text = "";
 
-            if (isNaN(luas) || luas.trim() === "" || Number(luas) < 1) {
-                text = "Data luas harus angka dan tidak boleh bernilai negatif";
+            if (
+                !Number.isInteger(ogc_fid) ||
+                !Number.isInteger(no) ||
+                !Number.isInteger(jumlah) ||
+                jumlah < 0
+            ) {
+                text = "OGC FID, nomor, dan jumlah harus berupa bilangan bulat yang valid.";
+            }
+            else if (
+                longitude < -180 || longitude > 180 ||
+                latitude < -90 || latitude > 90
+            ) {
+                text = "Koordinat longitude atau latitude tidak valid.";
+            }
+
+            if (text !== "") {
                 document.getElementById("informasi").innerHTML = text;
                 return false;
             }
@@ -39,5 +80,6 @@
             return true;
         }
     </script>
+
 </body>
 </html>
